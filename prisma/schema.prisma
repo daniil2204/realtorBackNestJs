@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Home {
+  id                  Int           @id @default(autoincrement())
+  addres              String
+  price               Float
+  number_of_bedrooms  Int
+  number_of_bathrooms Float
+  city                String
+  listed_date         DateTime      @default(now())
+  land_size           Float
+  type_property       ProptertyType
+  currency            String
+  created_at          DateTime      @default(now())
+  update_at           DateTime      @updatedAt
+  images              Image[]
+  realtor             User          @relation(fields: [realtor_id], references: [id])
+  realtor_id          Int
+  messages            Message[]
+}
+
+model Image {
+  id         Int      @id @default(autoincrement())
+  url        String
+  created_at DateTime @default(now())
+  update_at  DateTime @updatedAt
+  home       Home     @relation(fields: [home_id], references: [id])
+  home_id    Int
+}
+
+model User {
+  id               Int       @id @default(autoincrement())
+  name             String
+  email            String    @unique
+  phone            String
+  password         String
+  salt             String
+  created_at       DateTime  @default(now())
+  update_at        DateTime  @updatedAt
+  type             UserType
+  homes            Home[]
+  buyer_messages   Message[] @relation("buyer_messages")
+  realtor_messages Message[] @relation("realtor_messages")
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  message    String
+  created_at DateTime @default(now())
+  home_id    Int
+  home       Home     @relation(fields: [home_id], references: [id])
+  realtor_id Int
+  realtor    User     @relation("buyer_messages", fields: [realtor_id], references: [id])
+  buyer_id   Int
+  buyer      User     @relation("realtor_messages", fields: [buyer_id], references: [id])
+}
+
+enum ProptertyType {
+  RESIDENTIAL
+  CONDO
+}
+
+enum UserType {
+  ADMIN
+  BUYER
+  REALTOR
+}
