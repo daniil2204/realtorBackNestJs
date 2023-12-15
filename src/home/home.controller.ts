@@ -8,6 +8,7 @@ import {
   Query,
   Body,
   ParseIntPipe,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { HomeService } from './home.service';
 import {
@@ -15,7 +16,10 @@ import {
   HomeUpdateDTO,
   HomesResponseDTO,
 } from './dto/home.dto';
-import { ProptertyType } from '@prisma/client';
+import { ProptertyType, UserType } from '@prisma/client';
+import { User } from 'src/user/decorators/user.decorator';
+import { userType } from 'src/types/userTypes';
+import { Roles } from 'src/decorators/role.decorator';
 
 @Controller('homes')
 export class HomeController {
@@ -49,19 +53,37 @@ export class HomeController {
   ): Promise<HomesResponseDTO> {
     return this.homeService.getHomeById(id);
   }
+  @Roles(UserType.REALTOR)
   @Post()
-  createHome(@Body() createHomeData: HomeCreateRequestDTO) {
-    return this.homeService.createHome(createHomeData);
+  createHome(
+    @Body() createHomeData: HomeCreateRequestDTO,
+    @User() user: userType,
+  ) {
+    return this.homeService.createHome(createHomeData, user.id);
   }
+  @Roles(UserType.REALTOR)
   @Put('/:id')
-  updateHome(
+  async updateHome(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateHomeData: HomeUpdateDTO,
+    @User() user: userType,
   ) {
+    const realtor = await this.homeService.getRealtorByHomeId(user.id);
+    if (realtor.id !== user.id) {
+      throw new UnauthorizedException();
+    }
     return this.homeService.updateHomeById(id, updateHomeData);
   }
+  @Roles(UserType.REALTOR, UserType.ADMIN)
   @Delete('/:id')
-  deleteHome(@Param('id', ParseIntPipe) id: number) {
+  async deleteHome(
+    @Param('id', ParseIntPipe) id: number,
+    @User() user: userType,
+  ) {
+    const realtor = await this.homeService.getRealtorByHomeId(id);
+    if (realtor.id !== user.id) {
+      throw new UnauthorizedException();
+    }
     return this.homeService.deleteHomeById(id);
   }
 }

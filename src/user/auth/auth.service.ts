@@ -8,6 +8,13 @@ import * as jwt from 'jsonwebtoken';
 @Injectable()
 export class AuthService {
   constructor(private readonly prismaService: PrismaService) {}
+  async getMe(id: number) {
+    return await this.prismaService.user.findUnique({
+      where: {
+        id,
+      },
+    });
+  }
   async signup(
     { email, password, name, phone }: userRegisterType,
     userType: UserType,
