@@ -129,3 +129,9 @@ export class HomesResponseDTO {
     Object.assign(this, partiall);
   }
 }
+
+export class InquireDTO {
+  @IsString()
+  @IsNotEmpty()
+  message: string;
+}
